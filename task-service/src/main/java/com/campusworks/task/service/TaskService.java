@@ -77,29 +77,20 @@ public class TaskService {
     LocalDateTime biddingDeadline = LocalDateTime.now().plusMinutes(biddingPeriodMinutes);
         task.setBiddingDeadline(biddingDeadline);
         
-        // Ensure completion deadline follows business rule:
-        // - If user did not provide a completion deadline -> set to biddingDeadline + defaultCompletionHours
-        // - If user provided a completion deadline AND it is more than defaultCompletionHours from now -> use it
-        // - Otherwise (user provided < defaultCompletionHours from now) -> override and set to biddingDeadline + defaultCompletionHours
+     // Validate completion deadline is provided and valid
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime userCompletion = task.getCompletionDeadline();
-
-        if (userCompletion == null) {
-            LocalDateTime defaultCompletionDeadline = biddingDeadline.plusHours(defaultCompletionHours);
-            task.setCompletionDeadline(defaultCompletionDeadline);
-            log.info("📅 No completion deadline provided — setting default to: {} ({} hours after bidding deadline)",
-                    defaultCompletionDeadline, defaultCompletionHours);
-        } else {
-            // If user's completion deadline is sufficiently far in future relative to now, keep it
-            if (userCompletion.isAfter(now.plusHours(defaultCompletionHours))) {
-                log.info("📅 Using provided completion deadline: {} (>= {} hours from now)", userCompletion, defaultCompletionHours);
-            } else {
-                LocalDateTime defaultCompletionDeadline = biddingDeadline.plusHours(defaultCompletionHours);
-                task.setCompletionDeadline(defaultCompletionDeadline);
-                log.info("📅 Provided completion deadline {} is < {} hours from now — overriding to: {}",
-                        userCompletion, defaultCompletionHours, defaultCompletionDeadline);
-            }
+        if (task.getCompletionDeadline() == null) {
+            throw new RuntimeException("Task completion deadline is required");
         }
+        
+        // Validate completion deadline is at least 24 hours after bidding deadline
+        LocalDateTime minCompletionDeadline = biddingDeadline.plusHours(24);
+        if (task.getCompletionDeadline().isBefore(minCompletionDeadline)) {
+            throw new RuntimeException("Task completion deadline must be at least 30 hours after the bidding deadline");
+        }
+        
+        log.info("📅 Bidding deadline set to: {}", biddingDeadline);
+        log.info("📅 Completion deadline validated: {}", task.getCompletionDeadline());
         
         // Save task
         Task savedTask = taskRepository.save(task);
