@@ -177,13 +177,16 @@ export default function LandingPage() {
             <Button
               variant="contained"
               onClick={handleRegister}
-              endIcon={<ArrowRight size={16} />}
+              endIcon={<ArrowRight size={14} />}
               sx={{
-                borderRadius: 3,
-                px: 3,
-                py: 1,
+                borderRadius: 2,
+                px: { xs: 2, sm: 3 },
+                py: { xs: 0.5, sm: 1 },
                 textTransform: 'none',
                 fontWeight: 600,
+                fontSize: { xs: '0.875rem', sm: '1rem' },
+                minWidth: 'auto',
+                whiteSpace: 'nowrap',
                 background: 'linear-gradient(45deg, #20b2aa 30%, #008b8b 90%)',
                 '&:hover': {
                   background: 'linear-gradient(45deg, #1a9b93 30%, #007a7a 90%)',
@@ -239,11 +242,11 @@ export default function LandingPage() {
                     endIcon={<ArrowRight size={20} />}
                     sx={{
                       borderRadius: 3,
-                      px: 4,
-                      py: 1.5,
+                      px: { xs: 3, sm: 4 },
+                      py: { xs: 1, sm: 1.5 },
                       textTransform: 'none',
                       fontWeight: 600,
-                      fontSize: '1.1rem',
+                      fontSize: { xs: '1rem', sm: '1.1rem' },
                       background: 'linear-gradient(45deg, #20b2aa 30%, #008b8b 90%)',
                       '&:hover': {
                         background: 'linear-gradient(45deg, #1a9b93 30%, #007a7a 90%)',
@@ -258,10 +261,11 @@ export default function LandingPage() {
                     onClick={handleLogin}
                     sx={{
                       borderRadius: 3,
-                      px: 4,
-                      py: 1.5,
+                      px: { xs: 3, sm: 4 },
+                      py: { xs: 1, sm: 1.5 },
                       textTransform: 'none',
                       fontWeight: 600,
+                      fontSize: { xs: '1rem', sm: '1.1rem' },
                       borderColor: '#20b2aa',
                       color: '#20b2aa',
                       '&:hover': {
@@ -636,12 +640,12 @@ export default function LandingPage() {
                   sx={{
                     bgcolor: 'white',
                     color: '#20b2aa',
-                    px: 4,
-                    py: 1.5,
+                    px: { xs: 3, sm: 4 },
+                    py: { xs: 1, sm: 1.5 },
                     borderRadius: 3,
                     textTransform: 'none',
                     fontWeight: 600,
-                    fontSize: '1.1rem',
+                    fontSize: { xs: '1rem', sm: '1.1rem' },
                     '&:hover': {
                       bgcolor: 'rgba(255, 255, 255, 0.9)',
                     },
@@ -656,11 +660,12 @@ export default function LandingPage() {
                   sx={{
                     borderColor: 'white',
                     color: 'white',
-                    px: 4,
-                    py: 1.5,
+                    px: { xs: 3, sm: 4 },
+                    py: { xs: 1, sm: 1.5 },
                     borderRadius: 3,
                     textTransform: 'none',
                     fontWeight: 600,
+                    fontSize: { xs: '0.9rem', sm: '1rem' },
                     '&:hover': {
                       borderColor: 'white',
                       bgcolor: 'rgba(255, 255, 255, 0.1)',

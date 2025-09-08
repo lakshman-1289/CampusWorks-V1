@@ -121,11 +121,11 @@ const BidCard = ({
         cursor: 'pointer',
         transformStyle: 'preserve-3d',
         '&:hover': {
-          transform: 'translateY(-8px) scale(1.02) rotateY(360deg)',
+          transform: 'translateY(-8px) scale(1.02)',
           boxShadow: '0 20px 40px rgba(88, 233, 134, 0.15), 0 8px 16px rgba(0, 0, 0, 0.1)',
           border: '2px solid rgba(88, 233, 134, 0.6)',
           background: 'rgba(255, 255, 255, 1)',
-          transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           '& .card-header': {
             background: 'linear-gradient(135deg, rgba(88, 233, 134, 0.05) 0%, rgba(76, 175, 80, 0.05) 100%)',
           },
@@ -134,11 +134,11 @@ const BidCard = ({
           }
         },
         '&:active, &:focus': {
-          transform: 'translateY(-8px) scale(1.02) rotateY(360deg)',
+          transform: 'translateY(-8px) scale(1.02)',
           boxShadow: '0 20px 40px rgba(88, 233, 134, 0.15), 0 8px 16px rgba(0, 0, 0, 0.1)',
           border: '2px solid rgba(88, 233, 134, 0.6)',
           background: 'rgba(255, 255, 255, 1)',
-          transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           '& .card-header': {
             background: 'linear-gradient(135deg, rgba(88, 233, 134, 0.05) 0%, rgba(76, 175, 80, 0.05) 100%)',
           },
@@ -149,11 +149,11 @@ const BidCard = ({
         // Touch device specific styles
         '@media (hover: none) and (pointer: coarse)': {
           '&:active': {
-            transform: 'translateY(-4px) scale(1.01) rotateY(360deg)',
+            transform: 'translateY(-4px) scale(1.01)',
             boxShadow: '0 12px 24px rgba(88, 233, 134, 0.2), 0 4px 8px rgba(0, 0, 0, 0.15)',
             border: '2px solid rgba(88, 233, 134, 0.8)',
             background: 'rgba(255, 255, 255, 1)',
-            transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             '& .card-header': {
               background: 'linear-gradient(135deg, rgba(88, 233, 134, 0.08) 0%, rgba(76, 175, 80, 0.08) 100%)',
             },
