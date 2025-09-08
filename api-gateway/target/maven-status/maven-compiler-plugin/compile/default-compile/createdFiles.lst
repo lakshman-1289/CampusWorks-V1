@@ -1,0 +1,3 @@
+com\campusworks\gateway\ApiGatewayApplication.class
+com\campusworks\gateway\security\JwtAuthFilter.class
+com\campusworks\gateway\security\SecurityConfig.class
