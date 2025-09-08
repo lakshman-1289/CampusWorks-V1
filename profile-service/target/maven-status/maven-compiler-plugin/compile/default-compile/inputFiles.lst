@@ -1,0 +1,14 @@
+C:\Users\ManishReddy\OneDrive\Desktop\Campus_ works_Records\profile-service\src\main\java\com\campusworks\profile\client\TaskServiceClient.java
+C:\Users\ManishReddy\OneDrive\Desktop\Campus_ works_Records\profile-service\src\main\java\com\campusworks\profile\client\TaskServiceClientFallback.java
+C:\Users\ManishReddy\OneDrive\Desktop\Campus_ works_Records\profile-service\src\main\java\com\campusworks\profile\client\UserServiceClient.java
+C:\Users\ManishReddy\OneDrive\Desktop\Campus_ works_Records\profile-service\src\main\java\com\campusworks\profile\client\UserServiceClientFallback.java
+C:\Users\ManishReddy\OneDrive\Desktop\Campus_ works_Records\profile-service\src\main\java\com\campusworks\profile\controller\ProfileController.java
+C:\Users\ManishReddy\OneDrive\Desktop\Campus_ works_Records\profile-service\src\main\java\com\campusworks\profile\dto\TaskCompletionRequest.java
+C:\Users\ManishReddy\OneDrive\Desktop\Campus_ works_Records\profile-service\src\main\java\com\campusworks\profile\dto\TaskResponse.java
+C:\Users\ManishReddy\OneDrive\Desktop\Campus_ works_Records\profile-service\src\main\java\com\campusworks\profile\dto\UserEarningsResponse.java
+C:\Users\ManishReddy\OneDrive\Desktop\Campus_ works_Records\profile-service\src\main\java\com\campusworks\profile\dto\UserTaskStatisticsResponse.java
+C:\Users\ManishReddy\OneDrive\Desktop\Campus_ works_Records\profile-service\src\main\java\com\campusworks\profile\dto\UserVerificationResponse.java
+C:\Users\ManishReddy\OneDrive\Desktop\Campus_ works_Records\profile-service\src\main\java\com\campusworks\profile\model\Profile.java
+C:\Users\ManishReddy\OneDrive\Desktop\Campus_ works_Records\profile-service\src\main\java\com\campusworks\profile\ProfileServiceApplication.java
+C:\Users\ManishReddy\OneDrive\Desktop\Campus_ works_Records\profile-service\src\main\java\com\campusworks\profile\repo\ProfileRepository.java
+C:\Users\ManishReddy\OneDrive\Desktop\Campus_ works_Records\profile-service\src\main\java\com\campusworks\profile\service\ProfileService.java
