@@ -233,7 +233,23 @@ class SocketHandler {
           bidderEmail: room.bidderEmail,
           otherUser
         },
-        messages: messages.reverse()
+        messages: messages.reverse().map(msg => {
+          // ✅ CRITICAL: Ensure sender role is always correctly set
+          const isSenderTaskOwner = msg.senderId === room.ownerId;
+          const isSenderBidder = msg.senderId === room.bidderId;
+          
+          let senderRole = msg.senderRole || 'bidder'; // Default to bidder
+          if (isSenderTaskOwner) {
+            senderRole = 'owner';
+          } else if (isSenderBidder) {
+            senderRole = 'bidder';
+          }
+          
+          return {
+            ...msg.toObject(),
+            senderRole: senderRole // ✅ Force correct role
+          };
+        })
       });
 
       logger.info('User successfully joined task room', {
@@ -281,15 +297,35 @@ class SocketHandler {
       return;
     }
 
-    // ✅ FIXED: Create message with correct sender role
+    // ✅ CRITICAL FIX: Determine sender role based on room data
     const isSenderTaskOwner = room.ownerId === userId;
+    const isSenderBidder = room.bidderId === userId;
+    
+    // Ensure we have a valid role
+    let senderRole = 'bidder'; // Default to bidder
+    if (isSenderTaskOwner) {
+      senderRole = 'owner';
+    } else if (isSenderBidder) {
+      senderRole = 'bidder';
+    }
+    
+    console.log('🔍 BACKEND: Message sender role determination:', {
+      userId,
+      roomOwnerId: room.ownerId,
+      roomBidderId: room.bidderId,
+      isSenderTaskOwner,
+      isSenderBidder,
+      determinedRole: senderRole,
+      messageText: message.substring(0, 30) + '...'
+    });
+    
     const newMessage = new Message({
       roomId: room._id,
       taskId: parseInt(taskId),
       senderId: userId,
       senderEmail: userEmail,
       senderName: userEmail.split('@')[0], // Simple name extraction
-      senderRole: isSenderTaskOwner ? 'owner' : 'bidder', // ✅ CRITICAL: Add sender role
+      senderRole: senderRole, // ✅ CRITICAL: Always set correct role
       message: message.trim(),
       messageType,
       isRead: false
@@ -308,7 +344,7 @@ class SocketHandler {
     });
 
     // ✅ FIXED: Broadcast to room with sender role
-    this.io.to(`task-${taskId}`).emit('new-message', {
+    const messageToBroadcast = {
       id: newMessage._id,
       roomId: newMessage.roomId,
       taskId: newMessage.taskId,
@@ -320,7 +356,16 @@ class SocketHandler {
       messageType: newMessage.messageType,
       isRead: newMessage.isRead,
       createdAt: newMessage.createdAt
+    };
+    
+    console.log('📡 BACKEND: Broadcasting message with role:', {
+      messageId: newMessage._id,
+      senderRole: newMessage.senderRole,
+      messageText: newMessage.message.substring(0, 30) + '...',
+      fullMessage: messageToBroadcast
     });
+    
+    this.io.to(`task-${taskId}`).emit('new-message', messageToBroadcast);
 
     logger.info('Message sent', {
       userId,

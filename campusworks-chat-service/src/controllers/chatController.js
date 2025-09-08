@@ -80,10 +80,23 @@ class ChatController {
           bidderEmail: room.bidderEmail,
           otherUser
         },
-        messages: messages.reverse().map(msg => ({
-          ...msg.toObject(),
-          senderRole: msg.senderRole || (msg.senderId === room.ownerId ? 'owner' : 'bidder') // ✅ Ensure role is included
-        })) // Return in chronological order with role data
+        messages: messages.reverse().map(msg => {
+          // ✅ CRITICAL: Ensure sender role is always correctly set
+          const isSenderTaskOwner = msg.senderId === room.ownerId;
+          const isSenderBidder = msg.senderId === room.bidderId;
+          
+          let senderRole = msg.senderRole || 'bidder'; // Default to bidder
+          if (isSenderTaskOwner) {
+            senderRole = 'owner';
+          } else if (isSenderBidder) {
+            senderRole = 'bidder';
+          }
+          
+          return {
+            ...msg.toObject(),
+            senderRole: senderRole // ✅ Force correct role
+          };
+        }) // Return in chronological order with role data
       });
 
     } catch (error) {
@@ -145,7 +158,23 @@ class ChatController {
           bidderEmail: room.bidderEmail,
           otherUser
         },
-        messages: messages.reverse()
+        messages: messages.reverse().map(msg => {
+          // ✅ CRITICAL: Ensure sender role is always correctly set
+          const isSenderTaskOwner = msg.senderId === room.ownerId;
+          const isSenderBidder = msg.senderId === room.bidderId;
+          
+          let senderRole = msg.senderRole || 'bidder'; // Default to bidder
+          if (isSenderTaskOwner) {
+            senderRole = 'owner';
+          } else if (isSenderBidder) {
+            senderRole = 'bidder';
+          }
+          
+          return {
+            ...msg.toObject(),
+            senderRole: senderRole // ✅ Force correct role
+          };
+        })
       });
 
     } catch (error) {

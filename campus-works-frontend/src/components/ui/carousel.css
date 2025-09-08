@@ -1,0 +1,33 @@
+/* Carousel Styles */
+.carousel-container {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+  scroll-behavior: smooth;
+}
+
+.carousel-container::-webkit-scrollbar {
+  display: none; /* WebKit */
+}
+
+/* Custom font for testimonial cards */
+.font-tiemposHeadline {
+  font-family: 'Times New Roman', serif;
+  font-weight: 300;
+}
+
+/* Ensure proper flex behavior for carousel items */
+.carousel-item {
+  flex-shrink: 0;
+  width: 320px;
+}
+
+/* Smooth transitions for carousel */
+.carousel-transition {
+  transition: all 0.3s ease;
+}
+
+/* Hover effects for carousel cards */
+.carousel-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(32, 178, 170, 0.15);
+}
