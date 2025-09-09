@@ -17,10 +17,10 @@
 1. **Student posts task** with budget and requirements
 2. **Other students bid** on tasks within time window
 3. **Lowest bidder wins** and gets assigned
-4. **Assigned student completes work** offline and notifies completion
-5. **Task owner verifies work** offline and accepts online
-6. **Payment processed** through escrow system
-7. **Chat communication** for task clarification
+4. **Chat communication** for task clarification
+5. **Assigned student completes work** offline and notifies completion
+6. **Task owner verifies work** offline and accepts online
+7. **Payment proceed** in offline
 
 **💡 Note**: The same person can be both a task poster AND a task bidder - they're all students!
 
@@ -34,8 +34,6 @@
 - **Auth Service** - User authentication, authorization, role management
 - **Task Service** - Task CRUD operations, status management
 - **Bidding Service** - Bid management, auction logic
-- **Payment Service** - Escrow system, payment processing
-- **Notification Service** - Real-time notifications, messaging
 - **Profile Service** - User profile management
 - **Chat Service** - Real-time communication between users
 
@@ -256,8 +254,7 @@
 1. **campusworks_auth** - Users, roles, authentication
 2. **campusworks_tasks** - Task information, status
 3. **campusworks_bids** - Bidding data, auction history
-4. **campusworks_payment** - Escrow transactions, payments
-5. **campusworks_profile** - User profiles, preferences
+4. **campusworks_profile** - User profiles, preferences
 
 ### MongoDB Collections
 1. **campusworks_chat** - Chat messages, conversations (future)
@@ -333,7 +330,7 @@
 
 ### Log Categories
 - **Authentication**: Login, logout, registration attempts
-- **Business Logic**: Task creation, bidding, payment processing
+- **Business Logic**: Task creation, bidding
 - **Security**: Authorization failures, validation errors
 - **Performance**: Slow queries, timeouts
 - **Integration**: Service-to-service communication
@@ -440,7 +437,6 @@ public List<Task> getMyTasks(@RequestHeader("X-User-Id") Long userId) {
 - **Sample users** - Different roles and scenarios
 - **Sample tasks** - Various task types and statuses
 - **Sample bids** - Different bidding scenarios
-- **Sample payments** - Various payment states
 
 ---
 
@@ -497,8 +493,6 @@ public List<Task> getMyTasks(@RequestHeader("X-User-Id") Long userId) {
 - [ ] User registration and login working
 - [ ] Task creation and management functional
 - [ ] Bidding system operational
-- [ ] Payment processing working
-- [ ] Real-time notifications functional
 - [ ] Role-based access control enforced
 
 ### Non-Functional Requirements
