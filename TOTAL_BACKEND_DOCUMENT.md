@@ -34,17 +34,17 @@
 ### 🔑 Key Business Features
 - **Single Role System**: All users are STUDENTS (except one admin)
 - **Automatic Bid Selection**: System selects lowest bidder when deadline expires
-- **Custom Escrow Logic**: Payment held until task deadline (not fixed 30 days)
+- **Custom Escrow Logic**: Payment held until task deadline (not fixed 30 days)(part of idea, not implemented)
 - **Owner Bidding Restriction**: Task owners cannot bid on their own tasks
 - **Real-time Payment Processing**: Razorpay integration with webhooks
 - **Comprehensive Rating System**: User reputation and work history tracking
 
 ### 🏗️ Technical Architecture
-- **7 Microservices**: Eureka, Gateway, Auth, Task, Bidding, Profile, Payment
+- **7 Microservices**: Eureka, Gateway, Auth, Task, Bidding, Profile, Payment(not added)
 - **Service Discovery**: Netflix Eureka with automatic registration
 - **API Gateway**: Centralized routing, JWT validation, CORS handling
 - **Database**: MySQL with separate databases per service
-- **Payment Gateway**: Razorpay integration with webhook processing
+- **Payment Gateway**: Razorpay integration with webhook processing(not added)
 - **Circuit Breakers**: Resilience4j for fault tolerance
 
 ---
@@ -138,9 +138,7 @@ eureka.server.enable-self-preservation=false
 # Profile Service
 /api/profiles/** → profile-service
 
-# Payment Service
-/api/payments/** → payment-service
-```
+
 
 ---
 
@@ -870,234 +868,8 @@ Authorization: Bearer <jwt-token>
 }
 ```
 
-#### PUT `/profiles/user/{userId}/earnings`
-**Purpose**: Update user earnings (called by Payment Service)
 
-**Request Body**:
-```json
-{
-  "amount": 95.00,
-  "taskId": 1,
-  "description": "Earnings from completed task",
-  "paymentReference": "razorpay_payment_123"
-}
-```
 
----
-
-## 5. 💰 Payment Service (Port: 8084)
-
-**Purpose**: Payment processing, escrow management, and financial transactions
-
-**Database**: `campusworks_payment`
-
-**Key Features**:
-- **Razorpay integration** for payment processing
-- **Custom escrow logic** tied to task deadlines
-- **Wallet system** for user balance management
-- **Webhook processing** for real-time updates
-- **Scheduled tasks** for deadline monitoring
-- **Transaction history** and audit trails
-
-### Custom Business Logic
-
-**🔥 Key Innovation: Escrow Tied to Task Deadline**
-- Traditional systems use fixed escrow periods (30 days)
-- CampusWorks ties escrow expiration to task completion deadline
-- More predictable and fair for both clients and workers
-
-**Escrow Flow**:
-```
-1. Work Completed & Accepted → Money released immediately ✅
-2. Work Rejected by Owner → Money refunded immediately ✅  
-3. No Work by Deadline → Auto-refund at deadline expiration ✅
-```
-
-**Payment Status Enum Values**:
-- `CREATED` - Payment order created in Razorpay
-- `PENDING` - Waiting for user to complete payment
-- `PROCESSING` - Payment being processed by gateway
-- `COMPLETED` - Payment successful and confirmed
-- `FAILED` - Payment failed or declined
-- `REFUNDED` - Payment has been refunded
-
-**Escrow Status Enum Values**:
-- `CREATED` - Escrow created, waiting for payment
-- `FUNDED` - Payment received, money held in escrow
-- `RELEASED` - Money released to worker
-- `REFUNDED` - Money refunded to client
-- `DISPUTED` - Under dispute resolution
-
-**Transaction Status Enum Values**:
-- `PENDING` - Transaction is being processed
-- `COMPLETED` - Transaction completed successfully
-- `FAILED` - Transaction failed
-- `CANCELLED` - Transaction was cancelled
-
-**Transaction Type Enum Values**:
-- `ESCROW_FUNDED` - Money deposited into escrow
-- `PAYMENT_RELEASED` - Payment released to worker
-- `PAYMENT_REFUNDED` - Payment refunded to client
-- `PLATFORM_FEE` - Platform fee deduction
-- `WALLET_DEPOSIT` - Money added to wallet
-- `WALLET_WITHDRAWAL` - Money withdrawn from wallet
-
-**Wallet Status Enum Values**:
-- `ACTIVE` - Wallet is active and functional
-- `SUSPENDED` - Wallet is temporarily suspended
-- `CLOSED` - Wallet is permanently closed
-- `FROZEN` - Wallet is frozen due to issues
-
-### API Endpoints
-
-#### POST `/payments/tasks/{taskId}/create`
-**Purpose**: Create payment for winning bid
-
-**Headers Required**:
-```http
-Authorization: Bearer <jwt-token>
-```
-
-**Response (200)**:
-```json
-{
-  "success": true,
-  "message": "Payment created successfully",
-  "payment": {
-    "id": 1,
-    "taskId": 1,
-    "amount": 100.00,
-    "platformFee": 5.00,
-    "workerAmount": 95.00,
-    "status": "CREATED",
-    "razorpayOrderId": "order_ABC123",
-    "currency": "INR"
-  },
-  "escrow": {
-    "id": 1,
-    "taskId": 1,
-    "totalAmount": 100.00,
-    "status": "CREATED",
-    "expiresAt": "2024-01-20T23:59:59",
-    "canBeReleased": false,
-    "canBeRefunded": true
-  }
-}
-```
-
-#### POST `/payments/tasks/{taskId}/accept`
-**Purpose**: Accept work and release payment
-
-**Headers Required**:
-```http
-Authorization: Bearer <client-jwt-token>
-```
-
-**Request Body**:
-```json
-{
-  "reason": "Work completed successfully, meets all requirements"
-}
-```
-
-**Response (200)**:
-```json
-{
-  "success": true,
-  "message": "Work accepted and payment released successfully",
-  "payment": {
-    "id": 1,
-    "status": "COMPLETED",
-    "completedAt": "2024-01-15T10:30:00"
-  },
-  "escrow": {
-    "id": 1,
-    "status": "RELEASED",
-    "releasedAt": "2024-01-15T10:30:00",
-    "releaseReason": "Work completed successfully"
-  },
-  "transaction": {
-    "id": 15,
-    "type": "PAYMENT_RELEASED",
-    "amount": 95.00,
-    "description": "Payment released for completed task"
-  }
-}
-```
-
-#### POST `/payments/tasks/{taskId}/reject`
-**Purpose**: Reject work and refund payment
-
-**Request Body**:
-```json
-{
-  "reason": "Work does not meet requirements, needs revision"
-}
-```
-
-**Response (200)**:
-```json
-{
-  "success": true,
-  "message": "Work rejected and payment refunded successfully",
-  "escrow": {
-    "status": "REFUNDED",
-    "refundedAt": "2024-01-15T10:30:00"
-  },
-  "transaction": {
-    "type": "PAYMENT_REFUNDED",
-    "amount": 100.00
-  }
-}
-```
-
-#### GET `/payments/wallet`
-**Purpose**: Get user wallet information
-
-**Response (200)**:
-```json
-{
-  "success": true,
-  "wallet": {
-    "id": 5,
-    "userId": 123,
-    "balance": 1250.00,
-    "totalEarned": 2500.00,
-    "totalSpent": 1000.00,
-    "totalRefunded": 250.00,
-    "status": "ACTIVE",
-    "lastTransactionAt": "2024-01-15T10:30:00"
-  }
-}
-```
-
-#### GET `/payments/transactions`
-**Purpose**: Get user transaction history
-
-**Query Parameters**:
-- `page` (default: 0)
-- `size` (default: 10)
-
-**Response (200)**:
-```json
-{
-  "success": true,
-  "transactions": [
-    {
-      "id": 15,
-      "type": "PAYMENT_RELEASED",
-      "amount": 95.00,
-      "status": "COMPLETED",
-      "description": "Payment released for completed task",
-      "balanceBefore": 1155.00,
-      "balanceAfter": 1250.00,
-      "createdAt": "2024-01-15T10:30:00"
-    }
-  ]
-}
-```
-
----
 
 ## 🔄 Business Workflows
 
@@ -1137,46 +909,7 @@ sequenceDiagram
     B->>T: Update task status to ASSIGNED
     B->>P: Update winner's profile stats
 ```
-
-### 2. 💰 Payment & Escrow Workflow
-
-```mermaid
-sequenceDiagram
-    participant C as Client
-    participant G as API Gateway
-    participant Pay as Payment Service
-    participant R as Razorpay
-    participant T as Task Service
-    participant Prof as Profile Service
-
-    C->>G: POST /api/payments/tasks/{id}/create
-    G->>Pay: Forward with user headers
-    Pay->>T: Get task details (Feign)
-    Pay->>B: Get winning bid (Feign)
-    Pay->>R: Create Razorpay order
-    Pay->>Pay: Create payment record
-    Pay->>Pay: Create escrow (expires at task deadline)
-    Pay->>G: Return payment & escrow details
-    G->>C: Payment created, redirect to Razorpay
-
-    C->>R: Complete payment via Razorpay UI
-    R->>Pay: Webhook: payment.captured
-    Pay->>Pay: Verify webhook signature
-    Pay->>Pay: Update payment status to COMPLETED
-    Pay->>Pay: Fund escrow (status: FUNDED)
-
-    Note over C: Worker completes work offline
-
-    C->>G: POST /api/payments/tasks/{id}/accept
-    G->>Pay: Forward with user headers
-    Pay->>Pay: Release escrow to worker
-    Pay->>Prof: Update worker earnings (Feign)
-    Pay->>T: Update task status to COMPLETED
-    Pay->>G: Return success response
-    G->>C: Work accepted, payment released
-```
-
-### 3. ⏰ Automatic Deadline Handling
+### 2. ⏰ Automatic Deadline Handling
 
 ```mermaid
 sequenceDiagram
@@ -1275,15 +1008,15 @@ Each microservice has its own database for data isolation:
 │ • users             │  │ • tasks             │  │ • bids              │
 └─────────────────────┘  └─────────────────────┘  └─────────────────────┘
 
-┌─────────────────────┐  ┌─────────────────────┐
-│campusworks_profile  │  │campusworks_payment  │
-│                     │  │                     │
-│ • profiles          │  │ • payments          │
-│                     │  │ • escrows           │
-│                     │  │ • transactions      │
-│                     │  │ • wallets           │
-│                     │  │ • razorpay_webhooks │
-└─────────────────────┘  └─────────────────────┘
+┌─────────────────────┐  
+│campusworks_profile  │  
+│                     │ 
+│ • profiles          │  │ • payments in offline│
+│                     │  
+│                     │  
+│                     │  
+│                     │  
+└─────────────────────┘  
 ```
 
 ### Key Database Tables
@@ -1322,28 +1055,6 @@ CREATE TABLE tasks (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 ```
-
-#### Escrows Table (Payment Service) - 🔥 Custom Logic
-```sql
-CREATE TABLE escrows (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    task_id BIGINT NOT NULL UNIQUE,
-    payment_id BIGINT NOT NULL,
-    client_user_id BIGINT NOT NULL,
-    worker_user_id BIGINT NOT NULL,
-    total_amount DECIMAL(10,2) NOT NULL,
-    platform_fee DECIMAL(10,2) NOT NULL,
-    worker_amount DECIMAL(10,2) NOT NULL,
-    status ENUM('CREATED', 'FUNDED', 'RELEASED', 'REFUNDED', 'DISPUTED') NOT NULL,
-    expires_at TIMESTAMP NOT NULL, -- 🔥 TIED TO TASK DEADLINE
-    released_at TIMESTAMP NULL,
-    refunded_at TIMESTAMP NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-```
-
----
 
 ## 📚 API Reference by Business Function
 
@@ -1396,28 +1107,7 @@ CREATE TABLE escrows (
 | PUT | `/api/profiles/user/{userId}/rating` | Add rating | Yes |
 | PUT | `/api/profiles/user/{userId}/earnings` | Update earnings | Internal |
 
-### 💰 Payment APIs
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | `/api/payments/tasks/{taskId}/create` | Create payment | Yes (Client) |
-| POST | `/api/payments/tasks/{taskId}/accept` | Accept work | Yes (Client) |
-| POST | `/api/payments/tasks/{taskId}/reject` | Reject work | Yes (Client) |
-| GET | `/api/payments/tasks/{taskId}` | Get payment details | Yes |
-| GET | `/api/payments/wallet` | Get user wallet | Yes |
-| GET | `/api/payments/transactions` | Get transaction history | Yes |
-| GET | `/api/payments/escrows/task/{taskId}` | Get escrow details | Yes |
-
-### 🔔 Webhook & Admin APIs
-
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | `/api/payments/webhooks/razorpay` | Razorpay webhook | No (Signed) |
-| GET | `/api/payments/webhooks/status` | Webhook status | Admin |
-| POST | `/api/payments/admin/trigger-deadline-check` | Manual deadline check | Admin |
-| GET | `/api/payments/admin/config` | Get scheduler config | Admin |
-
----
 
 ## 📊 Enumerations & Constants Reference
 
@@ -1475,62 +1165,9 @@ const AVAILABILITY_STATUS = {
 };
 ```
 
-#### Payment-Related Enums
 
-**Payment Status (`PaymentStatus`)**:
-```javascript
-const PAYMENT_STATUS = {
-  CREATED: 'CREATED',         // Payment order created
-  PENDING: 'PENDING',         // Waiting for user payment
-  PROCESSING: 'PROCESSING',   // Payment being processed
-  COMPLETED: 'COMPLETED',     // Payment successful
-  FAILED: 'FAILED',          // Payment failed
-  REFUNDED: 'REFUNDED'       // Payment refunded
-};
-```
 
-**Escrow Status (`EscrowStatus`)**:
-```javascript
-const ESCROW_STATUS = {
-  CREATED: 'CREATED',         // Escrow created, waiting for payment
-  FUNDED: 'FUNDED',          // Payment received, money in escrow
-  RELEASED: 'RELEASED',      // Money released to worker
-  REFUNDED: 'REFUNDED',      // Money refunded to client
-  DISPUTED: 'DISPUTED'       // Under dispute resolution
-};
-```
 
-**Transaction Status (`TransactionStatus`)**:
-```javascript
-const TRANSACTION_STATUS = {
-  PENDING: 'PENDING',         // Transaction processing
-  COMPLETED: 'COMPLETED',     // Transaction successful
-  FAILED: 'FAILED',          // Transaction failed
-  CANCELLED: 'CANCELLED'     // Transaction cancelled
-};
-```
-
-**Transaction Types (`TransactionType`)**:
-```javascript
-const TRANSACTION_TYPE = {
-  ESCROW_FUNDED: 'ESCROW_FUNDED',           // Money deposited into escrow
-  PAYMENT_RELEASED: 'PAYMENT_RELEASED',     // Payment released to worker
-  PAYMENT_REFUNDED: 'PAYMENT_REFUNDED',     // Payment refunded to client
-  PLATFORM_FEE: 'PLATFORM_FEE',            // Platform fee deduction
-  WALLET_DEPOSIT: 'WALLET_DEPOSIT',         // Money added to wallet
-  WALLET_WITHDRAWAL: 'WALLET_WITHDRAWAL'    // Money withdrawn from wallet
-};
-```
-
-**Wallet Status (`WalletStatus`)**:
-```javascript
-const WALLET_STATUS = {
-  ACTIVE: 'ACTIVE',           // Wallet active and functional
-  SUSPENDED: 'SUSPENDED',     // Wallet temporarily suspended
-  CLOSED: 'CLOSED',          // Wallet permanently closed
-  FROZEN: 'FROZEN'           // Wallet frozen due to issues
-};
-```
 
 #### User Roles
 
@@ -1572,17 +1209,7 @@ const STATUS_LABELS = {
     ON_BREAK: 'On Break'
   },
   
-  // Payment Status Labels
-  PAYMENT_STATUS: {
-    CREATED: 'Payment Created',
-    PENDING: 'Payment Pending',
-    PROCESSING: 'Processing Payment',
-    COMPLETED: 'Payment Completed',
-    FAILED: 'Payment Failed',
-    REFUNDED: 'Payment Refunded'
-  }
-};
-```
+
 
 ### 🎨 Status Colors for UI
 
@@ -1691,21 +1318,7 @@ const API_CONFIG = {
       BASE: '/api/profiles',
       BY_USER: '/api/profiles/user',
       BY_AVAILABILITY: '/api/profiles/availability'
-    },
-    
-    // Payments
-    PAYMENTS: {
-      BASE: '/api/payments',
-      CREATE: '/api/payments/tasks/{taskId}/create',
-      ACCEPT: '/api/payments/tasks/{taskId}/accept',
-      REJECT: '/api/payments/tasks/{taskId}/reject',
-      WALLET: '/api/payments/wallet',
-      TRANSACTIONS: '/api/payments/transactions'
     }
-  }
-};
-```
-
 ---
 
 ## 🎨 Frontend Integration Guide
@@ -1769,34 +1382,9 @@ const taskState = {
     total: number
   }
 };
-```
-
-**Payment State**:
-```javascript
-const paymentState = {
-  wallet: {
-    balance: number,
-    totalEarned: number,
-    totalSpent: number
-  },
-  transactions: Transaction[],
-  currentPayment: Payment | null,
-  escrowStatus: EscrowStatus
-};
-```
-
+``
 ### Real-time Updates Needed
 
-**WebSocket Connections** (Future Enhancement):
-- Bid notifications
-- Payment confirmations  
-- Task status updates
-- Escrow deadline warnings
-
-**Polling Requirements**:
-- Task bidding countdown timers
-- Payment processing status
-- Escrow expiration warnings
 
 ### Date/Time Formatting
 
@@ -1889,12 +1477,6 @@ CampusWorks API Collection/
 │   ├── Get Profile
 │   ├── Update Profile
 │   └── Add Rating
-└── 💰 Payments/
-    ├── Create Payment
-    ├── Accept Work
-    ├── Reject Work
-    ├── Get Wallet
-    └── Get Transactions
 ```
 
 ### Environment Variables
@@ -2020,8 +1602,6 @@ mysql -u root -p < setup-database.sql
 # Phase 2 (Task, Bidding, Profile)
 mysql -u root -p < setup-phase2-databases.sql
 
-# Payment Service
-mysql -u root -p < setup-payment-database.sql
 ```
 
 **2. Verify Database Creation**:
@@ -2031,9 +1611,7 @@ SHOW DATABASES LIKE 'campusworks_%';
 -- campusworks_auth
 -- campusworks_tasks  
 -- campusworks_bids
--- campusworks_profile
--- campusworks_payment
-```
+-- campusworks_profile```
 
 ### Port Allocations
 
@@ -2045,7 +1623,6 @@ SHOW DATABASES LIKE 'campusworks_%';
 | **Task Service** | 9001 | http://localhost:9001 | Direct access (dev only) |
 | **Bidding Service** | 9002 | http://localhost:9002 | Direct access (dev only) |
 | **Profile Service** | 9003 | http://localhost:9003 | Direct access (dev only) |
-| **Payment Service** | 8084 | http://localhost:8084 | Direct access (dev only) |
 
 ### Environment-Specific Configurations
 
@@ -2090,7 +1667,6 @@ curl http://localhost:9000/actuator/health  # Auth
 curl http://localhost:9001/actuator/health  # Task
 curl http://localhost:9002/actuator/health  # Bidding
 curl http://localhost:9003/actuator/health  # Profile
-curl http://localhost:8084/actuator/health  # Payment
 ```
 
 **Eureka Dashboard**: http://localhost:8761
@@ -2208,7 +1784,6 @@ curl http://localhost:8084/actuator/health  # Payment
 | `BIDDING_DEADLINE_EXPIRED` | Bidding period ended | 400 | Refresh task list |
 | `INSUFFICIENT_BALANCE` | Not enough wallet balance | 400 | Add funds prompt |
 | `TASK_NOT_FOUND` | Task doesn't exist | 404 | Redirect to task list |
-| `ESCROW_ALREADY_RELEASED` | Payment already processed | 400 | Refresh status |
 | `SERVICE_CIRCUIT_BREAKER_OPEN` | Service unavailable | 503 | Retry later |
 
 ---
@@ -2274,12 +1849,6 @@ public class CreateTaskRequest {
 - BCrypt encryption with salt
 - Minimum 8 characters required
 - Passwords never returned in API responses
-
-**Payment Security**:
-- Razorpay webhook signature verification
-- PCI DSS compliance through Razorpay
-- No card details stored in application database
-- All financial transactions logged for audit
 
 **Database Security**:
 - Connection credentials in environment variables
@@ -2379,28 +1948,6 @@ com.mysql.cj.jdbc.exceptions.CommunicationsException: Communications link failur
 4. **Check Circuit Breaker**: May be open due to previous failures
 5. **Review Fallback**: Check fallback implementation
 
-#### 5. Payment Integration Issues
-
-**Problem**: Razorpay payments failing
-
-**Symptoms**:
-```json
-{
-  "error": "Payment creation failed",
-  "message": "Invalid API key provided"
-}
-```
-
-**Solutions**:
-1. **Check Razorpay Keys**:
-   ```properties
-   payment.razorpay.key-id=rzp_test_your_key_id
-   payment.razorpay.key-secret=your_secret_key
-   ```
-2. **Verify Test Mode**: Use test keys for development
-3. **Check Webhook URL**: Must be accessible from internet
-4. **Validate Signature**: Webhook signature verification must pass
-
 #### 6. Automatic Bid Selection Not Working
 
 **Problem**: Bids not being selected automatically
@@ -2450,7 +1997,6 @@ services=(
   "task:9001"
   "bidding:9002"
   "profile:9003"
-  "payment:8084"
 )
 
 for service in "${services[@]}"; do
@@ -2492,10 +2038,6 @@ UNION ALL
 SELECT 
     'campusworks_profile' as database_name,
     (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'campusworks_profile') as table_count
-UNION ALL
-SELECT 
-    'campusworks_payment' as database_name,
-    (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'campusworks_payment') as table_count;
 ```
 
 ---
@@ -2572,7 +2114,6 @@ services:
       - mysql_data:/var/lib/mysql
       - ./setup-database.sql:/docker-entrypoint-initdb.d/01-setup.sql
       - ./setup-phase2-databases.sql:/docker-entrypoint-initdb.d/02-phase2.sql
-      - ./setup-payment-database.sql:/docker-entrypoint-initdb.d/03-payment.sql
 
   eureka-server:
     build: ./eureka-server
@@ -2642,24 +2183,7 @@ services:
       EUREKA_URL: http://eureka-server:8761/eureka/
       SPRING_PROFILES_ACTIVE: docker
 
-  payment-service:
-    build: ./payment-service
-    ports:
-      - "8084:8084"
-    depends_on:
-      - mysql
-      - eureka-server
-    environment:
-      DB_HOST: mysql
-      DB_NAME: campusworks_payment
-      EUREKA_URL: http://eureka-server:8761/eureka/
-      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID}
-      RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET}
-      SPRING_PROFILES_ACTIVE: docker
 
-volumes:
-  mysql_data:
-```
 
 ### Environment Variables Template
 
@@ -2704,7 +2228,6 @@ SPRING_LOG_LEVEL=INFO
 **Business Metrics**:
 - Task creation rate
 - Bid placement rate  
-- Payment success rate
 - Automatic bid selection success rate
 
 **Database Metrics**:
