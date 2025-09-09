@@ -208,54 +208,7 @@
 
 ---
 
-### 6. **Payment Service** (Port: 9004)
-**Purpose**: Escrow system, payment processing
-**Technology**: Spring Boot, Spring Security, MySQL
-**Responsibilities**:
-- Hold payments in escrow
-- Release payments upon task completion
-- Handle refunds if needed
-- Payment status tracking
-
-**Database**: `campusworks_payment`
-**Key Endpoints**:
-- `GET /escrows` - List all escrow transactions (ADMIN only)
-- `POST /escrows` - Create escrow (hold payment)
-- `POST /escrows/{id}/release` - Release payment to worker
-- `POST /escrows/{id}/refund` - Refund payment to student
-
-**Business Logic**:
-- Payment held in escrow when task assigned
-- Released to task bidder when task completed and accepted
-- Refunded to task owner if task rejected
-- Status tracking: HELD → RELEASED/REFUNDED
-
----
-
-### 7. **Notification Service** (Port: 9005)
-**Purpose**: Real-time notifications, messaging
-**Technology**: Spring Boot, MongoDB
-**Responsibilities**:
-- Send notifications for task updates
-- Handle real-time messaging
-- Notification delivery tracking
-- User notification preferences
-
-**Database**: `campusworks_notifications` (MongoDB)
-**Key Endpoints**:
-- `GET /notifications` - List all notifications (ADMIN only)
-- `GET /notifications/user/{userId}` - Get user's notifications
-- `POST /notifications` - Create new notification
-- `POST /notifications/{id}/deliver` - Mark notification as delivered
-
-**Business Logic**:
-- Notifications for task assignment, completion, payment
-- Real-time delivery via WebSocket (future enhancement)
-- Delivery status tracking
-
----
-
-### 8. **Profile Service** (Port: 9006)
+### 6. **Profile Service** (Port: 9006)
 **Purpose**: User profile management
 **Technology**: Spring Boot, Spring Security, MySQL
 **Responsibilities**:
@@ -279,9 +232,9 @@
 
 ---
 
-### 9. **Chat Service** (Port: 9007) - Future Enhancement
+### 7. **Chat Service** (Port: 9007) - Future Enhancement
 **Purpose**: Real-time communication between users
-**Technology**: Spring Boot, WebSocket, Redis
+**Technology**: Nodejs, WebSocket, Mongodb
 **Responsibilities**:
 - Real-time messaging
 - Chat room management
@@ -307,8 +260,7 @@
 5. **campusworks_profile** - User profiles, preferences
 
 ### MongoDB Collections
-1. **campusworks_notifications** - Notifications, messages
-2. **campusworks_chat** - Chat messages, conversations (future)
+1. **campusworks_chat** - Chat messages, conversations (future)
 
 ---
 
@@ -350,20 +302,18 @@
 ### Phase 2: Core Business Logic
 1. **Task Service** - Task management
 2. **Bidding Service** - Auction system
-3. **Payment Service** - Escrow system
-4. **Integration testing** - Service communication
+3. **Integration testing** - Service communication
 
 ### Phase 3: Enhanced Features
 1. **Profile Service** - User profiles
-2. **Notification Service** - Messaging system
+2.  **Chat Service** - Real-time communication
 3. **Advanced security** - Role-based access control
 4. **Performance optimization** - Caching, load balancing
 
 ### Phase 4: Advanced Features
-1. **Chat Service** - Real-time communication
-2. **File upload** - Document sharing
+
 3. **Advanced analytics** - Reporting, metrics
-4. **Production deployment** - Docker, Kubernetes
+4. **Production deployment** - Docker..
 
 ---
 
@@ -523,13 +473,11 @@ public List<Task> getMyTasks(@RequestHeader("X-User-Id") Long userId) {
 ### Phase 2: Core Services
 - [ ] Task Service implementation
 - [ ] Bidding Service implementation
-- [ ] Payment Service implementation
 - [ ] Service integration testing
 - [ ] Basic workflow testing
 
 ### Phase 3: Enhancement
 - [ ] Profile Service
-- [ ] Notification Service
 - [ ] Advanced security
 - [ ] Performance optimization
 - [ ] Comprehensive testing
