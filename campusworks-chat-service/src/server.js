@@ -126,13 +126,16 @@ class ChatServer {
     this.app.get('/test-task/:taskId', async (req, res) => {
       try {
         const { taskId } = req.params;
-        const taskService = require('./src/services/taskService');
+        console.log('🧪 TEST ENDPOINT: Testing task fetch for taskId:', taskId);
+        const taskService = require('./services/taskService');
         const task = await taskService.getTaskById(taskId);
+        console.log('✅ TEST ENDPOINT: Task fetched successfully:', task);
         res.json({
           success: true,
           task: task
         });
       } catch (error) {
+        console.error('❌ TEST ENDPOINT: Error fetching task:', error.message);
         res.json({
           success: false,
           error: error.message,

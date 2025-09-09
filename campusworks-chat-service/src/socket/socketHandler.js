@@ -155,18 +155,45 @@ class SocketHandler {
     const { taskId } = data;
     const userId = socket.user.userId;
 
+    console.log('🚀 JOIN TASK ROOM DEBUG:', {
+      taskId,
+      userId,
+      userEmail: socket.user.email,
+      hasToken: !!socket.user.token,
+      tokenPreview: socket.user.token ? socket.user.token.substring(0, 20) + '...' : 'No token'
+    });
+
     logger.info('Attempting to join task room', { taskId, userId });
 
     try {
       // Get or create room - simplified approach
       let room = await ChatRoom.findByTaskId(taskId);
       
+      console.log('🔍 Room lookup result:', {
+        taskId,
+        roomFound: !!room,
+        roomId: room?._id
+      });
+      
       if (!room) {
+        console.log('📝 Creating new room for task:', { taskId, userId });
         logger.info('Creating new room for task', { taskId, userId });
         
         try {
           // ✅ CRITICAL FIX: Get actual task data to determine correct owner/bidder
-          const task = await taskService.getTaskById(taskId);
+          // Pass the JWT token from the socket user for authentication
+          console.log('🔍 Fetching task data with token...');
+          const task = await taskService.getTaskById(taskId, socket.user.token);
+          
+          console.log('📋 Task data received:', {
+            taskId,
+            taskTitle: task?.title,
+            taskStatus: task?.status,
+            ownerId: task?.ownerId,
+            ownerEmail: task?.ownerEmail,
+            assignedUserId: task?.assignedUserId,
+            assignedUserEmail: task?.assignedUserEmail
+          });
           
           if (!task) {
             throw new Error('Task not found');
@@ -259,6 +286,14 @@ class SocketHandler {
       });
 
     } catch (error) {
+      console.error('❌ JOIN TASK ROOM ERROR:', {
+        taskId,
+        userId,
+        error: error.message,
+        stack: error.stack,
+        errorType: error.constructor.name
+      });
+      
       logger.error('Join task room error', { 
         data: { taskId }, 
         error: error.message,

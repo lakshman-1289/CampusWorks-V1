@@ -15,20 +15,44 @@ class TaskService {
    */
   async getTaskById(taskId, token = null) {
     try {
+      console.log('🔍 TASK SERVICE DEBUG:', {
+        taskId,
+        baseUrl: this.baseUrl,
+        hasToken: !!token,
+        tokenLength: token?.length,
+        tokenPreview: token ? token.substring(0, 20) + '...' : 'No token'
+      });
+      
       logger.info('Fetching task from Spring Boot', { taskId, baseUrl: this.baseUrl, hasToken: !!token });
       
-      const headers = {};
+      const headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      };
       if (token) {
         headers.Authorization = `Bearer ${token}`;
+        console.log('🔑 Using JWT token for authentication');
+      } else {
+        console.log('⚠️ No JWT token provided - request may fail with 401');
       }
       
-      const response = await axios.get(
-        `${this.baseUrl}/api/tasks/${taskId}`,
-        {
-          headers,
-          timeout: 5000
-        }
-      );
+      const url = `${this.baseUrl}/api/tasks/${taskId}`;
+      console.log('🌐 Making request to:', url);
+      console.log('📋 Request headers:', headers);
+      
+      const response = await axios.get(url, {
+        headers,
+        timeout: 5000
+      });
+
+      console.log('✅ Task fetched successfully:', {
+        taskId,
+        status: response.status,
+        title: response.data?.title,
+        status: response.data?.status,
+        ownerId: response.data?.ownerId,
+        assignedUserId: response.data?.assignedUserId
+      });
 
       logger.info('Task fetched successfully', { 
         taskId, 
@@ -38,6 +62,18 @@ class TaskService {
 
       return response.data;
     } catch (error) {
+      console.error('❌ TASK SERVICE ERROR:', {
+        taskId,
+        error: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        responseData: error.response?.data,
+        config: {
+          url: error.config?.url,
+          headers: error.config?.headers
+        }
+      });
+      
       logger.error('Failed to get task:', { 
         taskId, 
         error: error.message, 
@@ -108,11 +144,12 @@ class TaskService {
    * Check if user is task owner
    * @param {number} taskId - Task ID
    * @param {number} userId - User ID
+   * @param {string} token - JWT token for authentication
    * @returns {Promise<boolean>} Is user task owner
    */
-  async isUserTaskOwner(taskId, userId) {
+  async isUserTaskOwner(taskId, userId, token = null) {
     try {
-      const task = await this.getTaskById(taskId);
+      const task = await this.getTaskById(taskId, token);
       return task.ownerId === userId;
     } catch (error) {
       logger.error('Failed to check task ownership:', error.message);
@@ -124,11 +161,12 @@ class TaskService {
    * Check if user is assigned to task
    * @param {number} taskId - Task ID
    * @param {number} userId - User ID
+   * @param {string} token - JWT token for authentication
    * @returns {Promise<boolean>} Is user assigned to task
    */
-  async isUserAssignedToTask(taskId, userId) {
+  async isUserAssignedToTask(taskId, userId, token = null) {
     try {
-      const task = await this.getTaskById(taskId);
+      const task = await this.getTaskById(taskId, token);
       return task.assignedUserId === userId;
     } catch (error) {
       logger.error('Failed to check task assignment:', error.message);
@@ -140,11 +178,12 @@ class TaskService {
    * Validate task access for chat
    * @param {number} taskId - Task ID
    * @param {number} userId - User ID
+   * @param {string} token - JWT token for authentication
    * @returns {Promise<Object>} Validation result
    */
-  async validateTaskAccess(taskId, userId) {
+  async validateTaskAccess(taskId, userId, token = null) {
     try {
-      const task = await this.getTaskById(taskId);
+      const task = await this.getTaskById(taskId, token);
       
       // Check if task is in progress
       if (task.status !== 'IN_PROGRESS') {

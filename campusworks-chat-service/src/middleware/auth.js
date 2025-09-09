@@ -55,6 +55,15 @@ const authenticateSocket = async (socket, next) => {
   try {
     const token = socket.handshake.auth.token;
 
+    console.log('🔐 SOCKET AUTH DEBUG:', {
+      socketId: socket.id,
+      hasToken: !!token,
+      tokenLength: token?.length,
+      tokenPreview: token ? token.substring(0, 20) + '...' : 'No token',
+      handshakeAuth: socket.handshake.auth,
+      handshakeHeaders: socket.handshake.headers
+    });
+
     logger.info('Socket authentication attempt', { 
       socketId: socket.id, 
       hasToken: !!token,
@@ -62,6 +71,7 @@ const authenticateSocket = async (socket, next) => {
     });
 
     if (!token) {
+      console.warn('⚠️ No token provided for socket authentication');
       logger.warn('No token provided for socket authentication');
       return next(new Error('Authentication token required'));
     }
